@@ -940,7 +940,7 @@ function render(d){
 
   // voting open, not yet voted
   const buttons=(d.voteOptions||[]).map(o=>
-    '<button class="vote-btn" style="background:'+o.color+'22;color:'+o.color+';border:2px solid '+o.color+'44;" onclick="castVote(\''+o.id+'\')">'+o.label+'</button>'
+    '<button class="vote-btn" data-opt="'+o.id+'" style="background:'+o.color+'22;color:'+o.color+';border:2px solid '+o.color+'44;" onclick="castVote(this.dataset.opt)">'+o.label+'</button>'
   ).join('');
 
   // vote counts
