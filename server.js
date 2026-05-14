@@ -930,6 +930,7 @@ function sectionName(id){
 
 function render(d){
   lastRender=Date.now();
+  currentOptions = d.voteOptions || [];
   if(d.section!==lastSection){voted=false;myVote=null;}
   lastSection=d.section;
   lastVotingOpen=d.votingOpen;
@@ -985,10 +986,24 @@ function render(d){
     +'<div style="display:flex;flex-direction:column;gap:6px;">'+bars+'</div>';
 }
 
+// Persistent voter ID — survives refresh, avoids IP dedup issues
+let voterId = '';
+try { voterId = localStorage.getItem('vid') || ''; } catch(e){}
+if (!voterId) {
+  voterId = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  try { localStorage.setItem('vid', voterId); } catch(e){}
+}
+
+let currentOptions = [];
+
 function castVote(optId){
   if(voted) return;
   voted=true; myVote=optId;
-  fetch('/vote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({option:optId})});
+  // Immediately update UI — don't wait for SSE
+  const opt = currentOptions.find(o=>o.id===optId) || {label:optId.toUpperCase(), color:'#84CC16'};
+  document.getElementById('app').innerHTML =
+    '<div class="confirm" style="color:'+opt.color+';">Vote cast for '+opt.label+' &#10003;</div>';
+  fetch('/vote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({option:optId, voterId:voterId})}).catch(()=>{});
 }
 
 fetch('/state').then(r=>r.json()).then(render).catch(()=>{});
@@ -1105,12 +1120,11 @@ const server = http.createServer((req, res) => {
     req.on('data', d => body += d);
     req.on('end', () => {
       if (!state.votingOpen) { res.writeHead(403); res.end(); return; }
-      const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
-      if (state.votes[ip]) { res.writeHead(200); res.end('{}'); return; }
       try {
-        const { option } = JSON.parse(body);
-        if (state.voteOptions.find(o => o.id === option)) {
-          state.votes[ip] = option;
+        const { option, voterId } = JSON.parse(body);
+        const key = voterId || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+        if (!state.votes[key] && state.voteOptions.find(o => o.id === option)) {
+          state.votes[key] = option;
           broadcastState();
         }
       } catch (_) {}
