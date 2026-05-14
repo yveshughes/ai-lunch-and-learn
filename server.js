@@ -729,16 +729,21 @@ function sectionName(id){
   return m[id]||id;
 }
 
-const es = new EventSource('/events');
-es.onmessage = function(e){
-  const d = JSON.parse(e.data);
-  if(d.type==='state') applyState(d);
-};
 let reconnectDelay=1000;
-es.onerror=function(){
-  setTimeout(()=>{location.reload();},reconnectDelay);
-  reconnectDelay=Math.min(reconnectDelay*2,30000);
-};
+function connectPresenterSSE(){
+  const es=new EventSource('/events');
+  es.onmessage=function(e){
+    reconnectDelay=1000;
+    const d=JSON.parse(e.data);
+    if(d.type==='state') applyState(d);
+  };
+  es.onerror=function(){
+    es.close();
+    setTimeout(connectPresenterSSE,reconnectDelay);
+    reconnectDelay=Math.min(reconnectDelay*2,30000);
+  };
+}
+connectPresenterSSE();
 
 function applyState(d){
   currentState = d;
@@ -865,10 +870,21 @@ let lastPhase = null;
 let lastSection = null;
 let lastVotingOpen = null;
 
-const es = new EventSource('/events');
-es.onmessage=function(e){const d=JSON.parse(e.data);if(d.type==='state')render(d);};
 let rDelay=1000;
-es.onerror=function(){setTimeout(()=>{location.reload();},rDelay);rDelay=Math.min(rDelay*2,30000);};
+function connectSSE(){
+  const es=new EventSource('/events');
+  es.onmessage=function(e){
+    rDelay=1000;
+    const d=JSON.parse(e.data);
+    if(d.type==='state')render(d);
+  };
+  es.onerror=function(){
+    es.close();
+    setTimeout(connectSSE,rDelay);
+    rDelay=Math.min(rDelay*2,30000);
+  };
+}
+connectSSE();
 
 function sectionName(id){
   const m={intro:'Introduction',tools:'AI Toolkit',rules:'Know the Rules',skills:'Skills &amp; Prompting',build:'Build an Agent',qa:'Q&amp;A',branch1:'Choose Your Path',branch2:'Choose Your Path'};
@@ -938,7 +954,7 @@ function castVote(optId){
   fetch('/vote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({option:optId})});
 }
 
-fetch('/state').then(r=>r.json()).then(render);
+fetch('/state').then(r=>r.json()).then(render).catch(()=>setTimeout(()=>fetch('/state').then(r=>r.json()).then(render),1000));
 </script>
 </body></html>`;
 }
