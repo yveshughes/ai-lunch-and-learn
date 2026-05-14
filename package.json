@@ -1,0 +1,12 @@
+{
+  "name": "ai-lunch-and-learn",
+  "version": "1.0.0",
+  "description": "AI Lunch & Learn — Choose Your Own Adventure presentation",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
