@@ -862,21 +862,24 @@ body{background:${C.bg};color:${C.white};font-family:Calibri,system-ui,sans-seri
 .bar-fill{height:100%;border-radius:3px;transition:width .3s;}
 </style>
 </head><body>
-<div class="container" id="app"></div>
+<div class="container" id="app">
+  <div class="standby-section" style="opacity:.4;">Connecting...</div>
+  <div class="dot" style="margin-top:16px;"></div>
+</div>
 <script>
 let voted = false;
 let myVote = null;
 let lastPhase = null;
 let lastSection = null;
 let lastVotingOpen = null;
+let lastRender = 0;
 
 let rDelay=1000;
 function connectSSE(){
   const es=new EventSource('/events');
   es.onmessage=function(e){
     rDelay=1000;
-    const d=JSON.parse(e.data);
-    if(d.type==='state')render(d);
+    try{const d=JSON.parse(e.data);if(d.type==='state')render(d);}catch(e){}
   };
   es.onerror=function(){
     es.close();
@@ -886,13 +889,22 @@ function connectSSE(){
 }
 connectSSE();
 
+// Polling fallback — kicks in if SSE hasn't delivered a render within 3s
+function pollState(){
+  if(Date.now()-lastRender>3000){
+    fetch('/state').then(r=>r.json()).then(render).catch(()=>{});
+  }
+  setTimeout(pollState,3000);
+}
+setTimeout(pollState,3000);
+
 function sectionName(id){
   const m={intro:'Introduction',tools:'AI Toolkit',rules:'Know the Rules',skills:'Skills &amp; Prompting',build:'Build an Agent',qa:'Q&amp;A',branch1:'Choose Your Path',branch2:'Choose Your Path'};
   return (m[id]||id).replace(/&amp;/g,'&');
 }
 
 function render(d){
-  // reset vote state if section changed or voting re-opened without our vote
+  lastRender=Date.now();
   if(d.section!==lastSection){voted=false;myVote=null;}
   lastSection=d.section;
   lastVotingOpen=d.votingOpen;
@@ -954,7 +966,7 @@ function castVote(optId){
   fetch('/vote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({option:optId})});
 }
 
-fetch('/state').then(r=>r.json()).then(render).catch(()=>setTimeout(()=>fetch('/state').then(r=>r.json()).then(render),1000));
+fetch('/state').then(r=>r.json()).then(render).catch(()=>{});
 </script>
 </body></html>`;
 }
