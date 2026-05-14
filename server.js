@@ -239,7 +239,7 @@ function pageIntro2() {
     <div style="font-size:22px;font-weight:700;color:${C.white};">Yves Hughes</div>
     <div style="font-size:14px;color:${C.green};">Senior Product Manager</div>
     <div style="font-size:13px;color:${C.muted};">RAC Acquisition - Commerce Experience</div>
-    <div style="width:100%;aspect-ratio:1;background:${C.card};border:1px dashed ${C.border};border-radius:8px;display:flex;align-items:center;justify-content:center;color:${C.muted};font-size:12px;max-width:160px;">[ Add photo here ]</div>
+    <img src="/img/headshot.jpg" style="width:160px;height:160px;object-fit:cover;border-radius:8px;border:2px solid ${C.border};display:block;" onerror="this.style.display='none'">
     <div style="display:flex;flex-direction:column;gap:6px;">
       ${['BFA Web Design','MBA Technology Mgmt','MS Data Science &amp; ML'].map(b=>`<span style="border:1px solid ${C.blue};color:${C.blue};padding:4px 10px;border-radius:4px;font-size:11px;letter-spacing:.5px;">${b}</span>`).join('')}
     </div>
@@ -558,50 +558,21 @@ function pageBuild2() {
 
 function pageBuild3() {
   return `
-<div style="display:flex;flex-direction:column;gap:16px;height:100%;">
-  <div>
-    <div style="font-size:clamp(16px,2.2vw,24px);font-weight:800;color:${C.white};">SEE IT IN ACTION</div>
-    <div style="font-size:13px;color:${C.muted};margin-top:4px;">Matt Allred — Legal AI Overview &nbsp;&bull;&nbsp; ~4 min</div>
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:32px;">
+  <div style="text-align:center;">
+    <div style="font-size:clamp(20px,2.5vw,32px);font-weight:800;color:${C.white};margin-bottom:8px;">SEE IT IN ACTION</div>
+    <div style="font-size:16px;color:${C.muted};">Matt Allred — Legal AI Overview &nbsp;&bull;&nbsp; ~4 min</div>
   </div>
-  <div style="flex:1;display:flex;align-items:center;justify-content:center;position:relative;">
-    <div id="video-wrapper" style="position:relative;width:100%;max-width:960px;border-radius:10px;overflow:hidden;border:2px solid ${C.border};background:#000;cursor:pointer;" onclick="playVideo()">
-      <video id="demo-video" src="/video/LegalAIOverview.mp4" style="width:100%;display:block;max-height:calc(100vh - 200px);object-fit:contain;" preload="metadata" playsinline></video>
-      <div id="play-overlay" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(10,15,30,.65);transition:opacity .2s;">
-        <div style="width:72px;height:72px;border-radius:50%;background:${C.green};display:flex;align-items:center;justify-content:center;">
-          <div style="width:0;height:0;border-style:solid;border-width:16px 0 16px 28px;border-color:transparent transparent transparent #000;margin-left:5px;"></div>
-        </div>
-        <div style="font-size:16px;font-weight:700;color:${C.white};">Click to play</div>
-      </div>
+  <a href="/video/LegalAIOverview.mp4" target="_blank" rel="noopener"
+     style="display:flex;flex-direction:column;align-items:center;gap:20px;background:${C.card};border:2px solid ${C.green};border-radius:16px;padding:48px 64px;cursor:pointer;text-decoration:none;transition:background .2s;"
+     onmouseover="this.style.background='#1a2a0a'" onmouseout="this.style.background='${C.card}'">
+    <div style="width:96px;height:96px;border-radius:50%;background:${C.green};display:flex;align-items:center;justify-content:center;">
+      <div style="width:0;height:0;border-style:solid;border-width:20px 0 20px 36px;border-color:transparent transparent transparent #000;margin-left:8px;"></div>
     </div>
-  </div>
-  <div style="display:flex;gap:10px;align-items:center;justify-content:center;flex-shrink:0;">
-    <button onclick="togglePlay()" style="background:${C.card};border:1px solid ${C.border};color:${C.white};padding:8px 20px;border-radius:5px;cursor:pointer;font-size:13px;font-family:inherit;" id="playpause-btn">Pause</button>
-    <button onclick="document.getElementById('demo-video').currentTime=0;document.getElementById('demo-video').pause();showOverlay();" style="background:${C.card};border:1px solid ${C.border};color:${C.muted};padding:8px 20px;border-radius:5px;cursor:pointer;font-size:13px;font-family:inherit;">Restart</button>
-    <button onclick="toggleFullscreen()" style="background:${C.card};border:1px solid ${C.border};color:${C.muted};padding:8px 20px;border-radius:5px;cursor:pointer;font-size:13px;font-family:inherit;">Fullscreen</button>
-  </div>
-</div>
-<script>
-(function(){
-  const vid = document.getElementById('demo-video');
-  const overlay = document.getElementById('play-overlay');
-  const btn = document.getElementById('playpause-btn');
-  function showOverlay(){ overlay.style.opacity='1'; overlay.style.pointerEvents='auto'; }
-  function hideOverlay(){ overlay.style.opacity='0'; overlay.style.pointerEvents='none'; }
-  window.playVideo = function(){ vid.play(); hideOverlay(); btn.textContent='Pause'; };
-  window.showOverlay = showOverlay;
-  window.togglePlay = function(){
-    if(vid.paused){ vid.play(); hideOverlay(); btn.textContent='Pause'; }
-    else { vid.pause(); btn.textContent='Play'; }
-  };
-  window.toggleFullscreen = function(){
-    if(document.fullscreenElement) document.exitFullscreen();
-    else vid.requestFullscreen();
-  };
-  vid.addEventListener('ended', function(){ showOverlay(); btn.textContent='Play'; });
-  vid.addEventListener('pause', function(){ if(!vid.ended) btn.textContent='Play'; });
-  vid.addEventListener('play', function(){ btn.textContent='Pause'; });
-})();
-</script>`;
+    <div style="font-size:22px;font-weight:700;color:${C.green};">Watch Video</div>
+    <div style="font-size:14px;color:${C.muted};">Opens in a new window</div>
+  </a>
+</div>`;
 }
 
 function pageQA(localIP) {
@@ -1024,6 +995,19 @@ function getBaseURL(req) {
 const server = http.createServer((req, res) => {
   const parsed = new URL(req.url, 'http://localhost');
   const path = parsed.pathname;
+
+  // Image files
+  if (path.startsWith('/img/')) {
+    const filename = nodePath.basename(path);
+    if (!/\.(jpg|jpeg|png|webp|gif)$/i.test(filename)) { res.writeHead(403); res.end(); return; }
+    const filepath = nodePath.join(__dirname, filename);
+    if (!fs.existsSync(filepath)) { res.writeHead(404); res.end('Not found'); return; }
+    const ext = nodePath.extname(filename).toLowerCase();
+    const mime = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.gif': 'image/gif' }[ext] || 'image/jpeg';
+    res.writeHead(200, { 'Content-Type': mime, 'Cache-Control': 'public, max-age=3600' });
+    fs.createReadStream(filepath).pipe(res);
+    return;
+  }
 
   // Video file streaming (supports range requests for scrubbing)
   if (path.startsWith('/video/')) {
