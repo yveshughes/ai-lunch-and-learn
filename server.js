@@ -837,7 +837,36 @@ fetch('/state').then(r=>r.json()).then(applyState);
 </body></html>`;
 }
 
+function renderAudienceState(d) {
+  const total = Object.values(d.voteCounts || {}).reduce((a, b) => a + b, 0) || 1;
+  if (d.phase === 'winner' && d.winnerSection) {
+    const opt = (d.voteOptions || []).find(o => o.id === d.winnerSection) || { label: d.winnerSection, color: C.green };
+    return `<div class="winner-announce" style="color:${opt.color};">${opt.label}</div><div class="winner-sub">Loading that section now...</div>`;
+  }
+  if (!d.votingOpen) {
+    const names = { intro:'Introduction', tools:'AI Toolkit', rules:'Know the Rules', skills:'Skills & Prompting', build:'Build an Agent', qa:'Q&A', branch1:'Choose Your Path', branch2:'Choose Your Path' };
+    return `<div class="standby-section">${names[d.section] || d.section}</div><div class="standby-sub">Stand by — your presenter will open voting soon</div><div class="dot" style="margin-top:16px;"></div>`;
+  }
+  const buttons = (d.voteOptions || []).map(o =>
+    `<button class="vote-btn" style="background:${o.color}22;color:${o.color};border:2px solid ${o.color}44;" onclick="castVote('${o.id}')">${o.label}</button>`
+  ).join('');
+  const bars = (d.voteOptions || []).map(o => {
+    const cnt = (d.voteCounts || {})[o.id] || 0;
+    const pct = Math.round(cnt / total * 100);
+    return `<div class="bar-row"><div style="display:flex;justify-content:space-between;font-size:12px;color:#64748B;"><span>${o.label}</span><span>${cnt} (${pct}%)</span></div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${o.color};"></div></div></div>`;
+  }).join('');
+  return `<div class="vote-q">What do you want to cover?</div><div style="display:flex;flex-direction:column;gap:10px;">${buttons}</div><div style="display:flex;flex-direction:column;gap:6px;">${bars}</div>`;
+}
+
 function audienceHTML(baseURL) {
+  const initialHTML = renderAudienceState({
+    phase: state.phase,
+    votingOpen: state.votingOpen,
+    section: state.currentSection,
+    voteOptions: state.voteOptions,
+    voteCounts: (() => { const c = {}; for (const o of state.voteOptions) c[o.id] = 0; for (const v of Object.values(state.votes)) if (c[v] !== undefined) c[v]++; return c; })(),
+    winnerSection: state.winnerSection,
+  });
   return `<!DOCTYPE html><html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>AI Lunch &amp; Learn — Vote</title>
@@ -854,7 +883,6 @@ body{background:${C.bg};color:${C.white};font-family:Calibri,system-ui,sans-seri
 .vote-btn:active{opacity:.7;}
 .vote-btn:disabled{opacity:.5;cursor:default;}
 .confirm{font-size:20px;font-weight:700;text-align:center;padding:20px;}
-.vote-count{font-size:12px;color:${C.muted};margin-top:4px;text-align:right;}
 .winner-announce{font-size:32px;font-weight:800;text-align:center;}
 .winner-sub{font-size:14px;color:${C.muted};text-align:center;margin-top:8px;}
 .bar-row{margin-top:6px;}
@@ -862,10 +890,7 @@ body{background:${C.bg};color:${C.white};font-family:Calibri,system-ui,sans-seri
 .bar-fill{height:100%;border-radius:3px;transition:width .3s;}
 </style>
 </head><body>
-<div class="container" id="app">
-  <div class="standby-section" style="opacity:.4;">Connecting...</div>
-  <div class="dot" style="margin-top:16px;"></div>
-</div>
+<div class="container" id="app">${initialHTML}</div>
 <script>
 let voted = false;
 let myVote = null;
